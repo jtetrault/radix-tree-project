@@ -11,7 +11,7 @@ namespace RadixTree
         static void Main(string[] args)
         {
             StringDictionary dictionary = new RedBlackTree();
-            string[] testers = {"a", "b", "c", "d"};
+            string[] testers = {"a", "b", "c", "d", "a"};
 
             foreach (var key in testers)
             {
@@ -24,6 +24,11 @@ namespace RadixTree
             Console.WriteLine(dictionary.Search("0"));
             Console.WriteLine(dictionary.Search("e"));
             Console.WriteLine(dictionary.Search("bb"));
+
+            dictionary.Delete("b");
+            Console.WriteLine(dictionary.Search("b"));
+            dictionary.Delete("a");
+            Console.WriteLine(dictionary.Search("a"));
         }
     }
 }

@@ -14,35 +14,22 @@ namespace RadixTree
         /// </summary>
         public bool Search(String key)
         {
-            Node current = Root;
-            while (current != null && !key.Equals(current.Key))
-            {
-                if (key.CompareTo(current.Key) < 0) 
-                {
-                    current = current.Left;
-                }
-                else
-                {
-                    current = current.Right;
-                }
-            }
-
-            // If we are looking at null, then key was not found and we return false.
-            // If we are not looking at null, then key was found and we return true.
-            return current != null;
+            return this.SearchForNode(key) != null;
         }
 
+        /// <summary>
+        /// Insert a key into the tree. If the key already exists in the tree, then do not insert.
+        /// </summary>
         public void Insert(String key)
         {
             Node current = this.Root;
             Node previous = null;
-            Node toInsert = new Node(key);
 
             // Find the leaf location to place toInsert.
-            while (current != null)
+            while (current != null && !current.Key.Equals(key))
             {
                 previous = current;
-                if (toInsert.Key.CompareTo(current.Key) < 0)
+                if (key.CompareTo(current.Key) < 0)
                 {
                     current = current.Left;
                 }
@@ -52,6 +39,12 @@ namespace RadixTree
                 }
             }
 
+            if (current != null) // Disallow duplicate keys.
+            {
+                return;
+            }
+
+            Node toInsert = new Node(key);
             toInsert.Parent = previous;
 
             if (previous == null) // Empty Tree.
@@ -66,11 +59,21 @@ namespace RadixTree
             {
                 previous.Right = toInsert;
             }
+
+            this.Size++;
         }
 
+        /// <summary>
+        /// Removes a key from the tree.
+        /// </summary>
         public void Delete(String key)
         {
-
+            Node toDelete = this.SearchForNode(key);
+            if (toDelete != null)
+            {
+                this.DeleteNode(toDelete);
+                this.Size--;
+            }
         }
 
         public String Predecessor(String key)
@@ -83,6 +86,82 @@ namespace RadixTree
             return null;
         }
 
+        /** Private Methods **************************************************/
+        /// <summary>
+        /// Removes a Node from the tree, replacing it with one of its children as needed.
+        /// </summary>
+        private void DeleteNode(Node toDelete)
+        {
+            if (toDelete.Left == null) // 0 children or only right child.
+            {
+                Transplant(toDelete, toDelete.Right);
+            }
+            else if (toDelete.Right == null) // Only left child.
+            {
+                Transplant(toDelete, toDelete.Left);
+            }
+            else // Left and Right child. Replace toDelete with its successor.
+            {
+                Node successor = toDelete.Minimum();
+                if (successor.Parent != toDelete)
+                {
+                    Transplant(successor, successor.Right);
+                    successor.Right = toDelete.Right;
+                    successor.Right.Parent = successor;
+                }
+                Transplant(toDelete, successor);
+                successor.Left = toDelete.Left;
+                successor.Left.Parent = successor;
+            }
+        }
+
+        /// <summary>
+        /// Search the tree for a Node containing key and return it. If no node is found, return null.
+        /// </summary>
+        private Node SearchForNode(string key)
+        {
+            Node current = Root;
+            while (current != null && !key.Equals(current.Key))
+            {
+                if (key.CompareTo(current.Key) < 0)
+                {
+                    current = current.Left;
+                }
+                else
+                {
+                    current = current.Right;
+                }
+            }
+
+            return current;
+        }
+
+        /// <summary>
+        /// Replace one subtree (current) with another (replacement).
+        /// 
+        /// current's parent node will be updated to point to replacement, and
+        /// replacement's parent will be updated to current's parent.
+        /// </summary>
+        private void Transplant(Node current, Node replacement)
+        {
+            if (current == this.Root) // Replacing the Root node.
+            {
+                this.Root = replacement;
+            }
+            else if (current == current.Parent.Left) // Replacing a left node
+            {
+                current.Parent.Left = replacement;
+            }
+            else // Replacing a right node
+            {
+                current.Parent.Right = replacement;
+            }
+            if (replacement != null) // Update the parent of the replacement node
+            {
+                replacement.Parent = current.Parent;
+            } 
+        }
+
         /*** Instance Variables **********************************************/
 
         private Node Root { get; set; }
@@ -92,6 +171,7 @@ namespace RadixTree
 
     public class Node
     {
+        /*** Public Interface ************************************************/
         /// <summary>
         /// Creates a Node instance with null Parent, Left and Right pointers,
         /// with its Key set to key.
@@ -100,6 +180,19 @@ namespace RadixTree
         {
             this.Key = key;
             this.Parent = this.Left = this.Right = null;
+        }
+
+        /// <summary>
+        /// Returns the leftmost Node in the subtree rooted at this Node. 
+        /// </summary>
+        public Node Minimum()
+        {
+            Node current = this;
+            while (current.Left != null)
+            {
+                current = current.Left;
+            }
+            return current;
         }
 
         /// <summary>
