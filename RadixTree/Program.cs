@@ -25,9 +25,7 @@ namespace RadixTree
             Console.WriteLine(dictionary.Search("e"));
             Console.WriteLine(dictionary.Search("bb"));
 
-            dictionary.Delete("b");
             Console.WriteLine(dictionary.Search("b"));
-            dictionary.Delete("a");
             Console.WriteLine(dictionary.Search("a"));
         }
     }

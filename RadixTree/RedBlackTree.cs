@@ -6,15 +6,30 @@ using System.Threading.Tasks;
 
 namespace RadixTree
 {
+    public enum NodeColor { Black, Red };
+
     class RedBlackTree : StringDictionary
     {
         /*** Public Interface ************************************************/
+        /// <summary>
+        /// Initialize the Red Black Tree. Set the Root to Nil, and Size to 0.
+        /// </summary>
+        public RedBlackTree()
+        {
+            this.Nil = new Node(null);
+            this.Nil.Left = this.Nil;
+            this.Nil.Right = this.Nil;
+            this.Nil.Color = NodeColor.Black;
+            this.Root = this.Nil;
+            this.Size = 0;
+        }
+
         /// <summary>
         /// Search the tree for key. Return true if the key is found, and false if not.
         /// </summary>
         public bool Search(String key)
         {
-            return this.SearchForNode(key) != null;
+            return this.SearchForNode(key) != this.Nil;
         }
 
         /// <summary>
@@ -23,10 +38,11 @@ namespace RadixTree
         public void Insert(String key)
         {
             Node current = this.Root;
-            Node previous = null;
+            Node previous = this.Nil;
+            Node toInsert;
 
             // Find the leaf location to place toInsert.
-            while (current != null && !current.Key.Equals(key))
+            while (current != this.Nil && !current.Key.Equals(key))
             {
                 previous = current;
                 if (key.CompareTo(current.Key) < 0)
@@ -39,15 +55,15 @@ namespace RadixTree
                 }
             }
 
-            if (current != null) // Disallow duplicate keys.
+            if (current != this.Nil) // Disallow duplicate keys.
             {
                 return;
             }
 
-            Node toInsert = new Node(key);
+            toInsert = new Node(key);
             toInsert.Parent = previous;
 
-            if (previous == null) // Empty Tree.
+            if (previous == this.Nil) // Empty Tree.
             {
                 this.Root = toInsert;
             }
@@ -59,6 +75,11 @@ namespace RadixTree
             {
                 previous.Right = toInsert;
             }
+            toInsert.Left = this.Nil;
+            toInsert.Right = this.Nil;
+            toInsert.Color = NodeColor.Red;
+
+            this.InsertFixup(toInsert);
 
             this.Size++;
         }
@@ -69,7 +90,7 @@ namespace RadixTree
         public void Delete(String key)
         {
             Node toDelete = this.SearchForNode(key);
-            if (toDelete != null)
+            if (toDelete != this.Nil)
             {
                 this.DeleteNode(toDelete);
                 this.Size--;
@@ -92,11 +113,11 @@ namespace RadixTree
         /// </summary>
         private void DeleteNode(Node toDelete)
         {
-            if (toDelete.Left == null) // 0 children or only right child.
+            if (toDelete.Left == this.Nil) // 0 children or only right child.
             {
                 Transplant(toDelete, toDelete.Right);
             }
-            else if (toDelete.Right == null) // Only left child.
+            else if (toDelete.Right == this.Nil) // Only left child.
             {
                 Transplant(toDelete, toDelete.Left);
             }
@@ -116,12 +137,128 @@ namespace RadixTree
         }
 
         /// <summary>
+        /// Fixes up the Red Black Tree after an insertion, ensuring that the Red Black Tree properties are intact.
+        /// </summary>
+        private void InsertFixup(Node current)
+        {
+            Node grandparent;
+            Node uncle;
+            while (current.Parent.Color == NodeColor.Red)
+            {
+                grandparent = current.Parent.Parent;
+                if (current.Parent == grandparent.Left)
+                {
+                    uncle = grandparent.Right;
+                    if (uncle.Color == NodeColor.Red)
+                    {
+                        current.Parent.Color = NodeColor.Black;
+                        uncle.Color = NodeColor.Black;
+                        grandparent.Color = NodeColor.Red;
+                        current = grandparent;
+                    }
+                    else
+                    {
+                        if (current == current.Parent.Right)
+                        {
+                            current = current.Parent;
+                            this.LeftRotate(current);
+                        }
+                        current.Parent.Color = NodeColor.Black;
+                        grandparent = current.Parent.Parent;
+                        grandparent.Color = NodeColor.Red;
+                        this.RightRotate(grandparent);
+                    }
+                }
+                else // current.Parent == grandparent.Right
+                {
+                    uncle = grandparent.Left;
+                    if (uncle.Color == NodeColor.Red)
+                    {
+                        current.Parent.Color = NodeColor.Black;
+                        uncle.Color = NodeColor.Black;
+                        grandparent.Color = NodeColor.Red;
+                        current = grandparent;
+                    }
+                    else
+                    {
+                        if (current == current.Parent.Left)
+                        {
+                            current = current.Parent;
+                            this.RightRotate(current);
+                        }
+                        current.Parent.Color = NodeColor.Black;
+                        grandparent = current.Parent.Parent;
+                        grandparent.Color = NodeColor.Red;
+                        this.LeftRotate(grandparent);
+                    }
+                }
+            }
+            this.Root.Color = NodeColor.Black;
+        }
+
+        /// <summary>
+        /// Perform a left rotation on the Node toRotate.
+        /// </summary>
+        private void LeftRotate(Node toRotate)
+        {
+            Node newParent = toRotate.Right;
+            toRotate.Right = newParent.Left;
+            if (newParent.Left != this.Nil)
+            {
+                newParent.Left.Parent = toRotate;
+            }
+            newParent.Parent = toRotate.Parent;
+            if (toRotate.Parent == this.Nil)
+            {
+                this.Root = newParent;
+            }
+            else if (toRotate == toRotate.Parent.Left)
+            {
+                toRotate.Parent.Left = newParent;
+            }
+            else
+            {
+                toRotate.Parent.Right = newParent;
+            }
+            newParent.Left = toRotate;
+            toRotate.Parent = newParent;
+        }
+
+        /// <summary>
+        /// Perform a right rotation on the node toRotate.
+        /// </summary>
+        private void RightRotate(Node toRotate)
+        {
+            Node newParent = toRotate.Left;
+            toRotate.Left = newParent.Right;
+            if (newParent.Right != this.Nil)
+            {
+                newParent.Right.Parent = toRotate;
+            }
+            newParent.Parent = toRotate.Parent;
+            if (toRotate.Parent == this.Nil)
+            {
+                this.Root = newParent;
+            }
+            else if (toRotate == toRotate.Parent.Right)
+            {
+                toRotate.Parent.Right = newParent;
+            }
+            else
+            {
+                toRotate.Parent.Left = newParent;
+            }
+            newParent.Right = toRotate;
+            toRotate.Parent = newParent;
+        }
+
+        /// <summary>
         /// Search the tree for a Node containing key and return it. If no node is found, return null.
         /// </summary>
         private Node SearchForNode(string key)
         {
             Node current = Root;
-            while (current != null && !key.Equals(current.Key))
+            while (current != this.Nil && !key.Equals(current.Key))
             {
                 if (key.CompareTo(current.Key) < 0)
                 {
@@ -156,7 +293,7 @@ namespace RadixTree
             {
                 current.Parent.Right = replacement;
             }
-            if (replacement != null) // Update the parent of the replacement node
+            if (replacement != this.Nil) // Update the parent of the replacement node
             {
                 replacement.Parent = current.Parent;
             } 
@@ -164,8 +301,19 @@ namespace RadixTree
 
         /*** Instance Variables **********************************************/
 
+        /// <summary>
+        /// The root of the Red Black Tree.
+        /// </summary>
         private Node Root { get; set; }
 
+        /// <summary>
+        /// A sentinel Node used as a placeholder for null.
+        /// </summary>
+        private Node Nil { get; set; }
+
+        /// <summary>
+        /// The number of keys stored in the Red Black Tree.
+        /// </summary>
         private int Size { get; set; }
     }
 
@@ -179,7 +327,7 @@ namespace RadixTree
         public Node(String key)
         {
             this.Key = key;
-            this.Parent = this.Left = this.Right = null;
+            this.Color = NodeColor.Red;
         }
 
         /// <summary>
@@ -195,6 +343,7 @@ namespace RadixTree
             return current;
         }
 
+        /*** Instance Variables **********************************************/
         /// <summary>
         /// The key contained in this Node.
         /// </summary>
@@ -214,5 +363,10 @@ namespace RadixTree
         /// The Node's right child.
         /// </summary>
         public Node Right { get; set; }
+
+        /// <summary>
+        /// The current color of this Node.
+        /// </summary>
+        public NodeColor Color { get; set; }
     }
 }
