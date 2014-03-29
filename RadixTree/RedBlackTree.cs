@@ -16,7 +16,7 @@ namespace RadixTree
         /// </summary>
         public RedBlackTree()
         {
-            this.Nil = new Node(null);
+            this.Nil = new RedBlackNode(null);
             this.Nil.Left = this.Nil;
             this.Nil.Right = this.Nil;
             this.Nil.Color = NodeColor.Black;
@@ -37,9 +37,9 @@ namespace RadixTree
         /// </summary>
         public void Insert(String key)
         {
-            Node current = this.Root;
-            Node previous = this.Nil;
-            Node toInsert;
+            RedBlackNode current = this.Root;
+            RedBlackNode previous = this.Nil;
+            RedBlackNode toInsert;
 
             // Find the leaf location to place toInsert.
             while (current != this.Nil && !current.Key.Equals(key))
@@ -60,7 +60,7 @@ namespace RadixTree
                 return;
             }
 
-            toInsert = new Node(key);
+            toInsert = new RedBlackNode(key);
             toInsert.Parent = previous;
 
             if (previous == this.Nil) // Empty Tree.
@@ -89,7 +89,7 @@ namespace RadixTree
         /// </summary>
         public void Delete(String key)
         {
-            Node toDelete = this.SearchForNode(key);
+            RedBlackNode toDelete = this.SearchForNode(key);
             if (toDelete != this.Nil)
             {
                 this.DeleteNode(toDelete);
@@ -114,9 +114,9 @@ namespace RadixTree
         /// 
         /// Called by DeleteNode.
         /// </summary>
-        private void DeleteFixup(Node current)
+        private void DeleteFixup(RedBlackNode current)
         {
-            Node sibling;
+            RedBlackNode sibling;
             while (current != this.Root && current.Color == NodeColor.Black)
             {
                 if (current == current.Parent.Left)
@@ -181,10 +181,10 @@ namespace RadixTree
         /// <summary>
         /// Removes a Node from the tree, replacing it with one of its children as needed.
         /// </summary>
-        private void DeleteNode(Node toDelete)
+        private void DeleteNode(RedBlackNode toDelete)
         {
-            Node y = toDelete;
-            Node x;
+            RedBlackNode y = toDelete;
+            RedBlackNode x;
             NodeColor yOriginalColor = y.Color;
             if (toDelete.Left == this.Nil) // 0 children or only right child.
             {
@@ -225,10 +225,10 @@ namespace RadixTree
         /// <summary>
         /// Fixes up the Red Black Tree after an insertion, ensuring that the Red Black Tree properties are intact.
         /// </summary>
-        private void InsertFixup(Node current)
+        private void InsertFixup(RedBlackNode current)
         {
-            Node grandparent;
-            Node uncle;
+            RedBlackNode grandparent;
+            RedBlackNode uncle;
             while (current.Parent.Color == NodeColor.Red)
             {
                 grandparent = current.Parent.Parent;
@@ -285,9 +285,9 @@ namespace RadixTree
         /// <summary>
         /// Perform a left rotation on the Node toRotate.
         /// </summary>
-        private void LeftRotate(Node toRotate)
+        private void LeftRotate(RedBlackNode toRotate)
         {
-            Node newParent = toRotate.Right;
+            RedBlackNode newParent = toRotate.Right;
             toRotate.Right = newParent.Left;
             if (newParent.Left != this.Nil)
             {
@@ -313,9 +313,9 @@ namespace RadixTree
         /// <summary>
         /// Perform a right rotation on the node toRotate.
         /// </summary>
-        private void RightRotate(Node toRotate)
+        private void RightRotate(RedBlackNode toRotate)
         {
-            Node newParent = toRotate.Left;
+            RedBlackNode newParent = toRotate.Left;
             toRotate.Left = newParent.Right;
             if (newParent.Right != this.Nil)
             {
@@ -341,9 +341,9 @@ namespace RadixTree
         /// <summary>
         /// Search the tree for a Node containing key and return it. If no node is found, return null.
         /// </summary>
-        private Node SearchForNode(string key)
+        private RedBlackNode SearchForNode(string key)
         {
-            Node current = Root;
+            RedBlackNode current = Root;
             while (current != this.Nil && !key.Equals(current.Key))
             {
                 if (key.CompareTo(current.Key) < 0)
@@ -365,7 +365,7 @@ namespace RadixTree
         /// current's parent node will be updated to point to replacement, and
         /// replacement's parent will be updated to current's parent.
         /// </summary>
-        private void Transplant(Node current, Node replacement)
+        private void Transplant(RedBlackNode current, RedBlackNode replacement)
         {
             if (current.Parent == this.Nil) // Replacing the Root node.
             {
@@ -387,12 +387,12 @@ namespace RadixTree
         /// <summary>
         /// The root of the Red Black Tree.
         /// </summary>
-        private Node Root { get; set; }
+        private RedBlackNode Root { get; set; }
 
         /// <summary>
         /// A sentinel Node used as a placeholder for null.
         /// </summary>
-        private Node Nil { get; set; }
+        private RedBlackNode Nil { get; set; }
 
         /// <summary>
         /// The number of keys stored in the Red Black Tree.
@@ -400,14 +400,14 @@ namespace RadixTree
         private int Size { get; set; }
     }
 
-    public class Node
+    public class RedBlackNode
     {
         /*** Public Interface ************************************************/
         /// <summary>
         /// Creates a Node instance with null Parent, Left and Right pointers,
         /// with its Key set to key.
         /// </summary>
-        public Node(String key)
+        public RedBlackNode(String key)
         {
             this.Key = key;
             this.Color = NodeColor.Red;
@@ -416,9 +416,9 @@ namespace RadixTree
         /// <summary>
         /// Returns the leftmost Node in the subtree rooted at this Node. 
         /// </summary>
-        public Node Minimum()
+        public RedBlackNode Minimum()
         {
-            Node current = this;
+            RedBlackNode current = this;
             while (current.Left != null)
             {
                 current = current.Left;
@@ -435,17 +435,17 @@ namespace RadixTree
         /// <summary>
         /// The Node's parent in the Binary Search Tree.
         /// </summary>
-        public Node Parent { get; set; }
+        public RedBlackNode Parent { get; set; }
 
         /// <summary>
         /// The Node's left child.
         /// </summary>
-        public Node Left { get; set; }
+        public RedBlackNode Left { get; set; }
 
         /// <summary>
         /// The Node's right child.
         /// </summary>
-        public Node Right { get; set; }
+        public RedBlackNode Right { get; set; }
 
         /// <summary>
         /// The current color of this Node.
