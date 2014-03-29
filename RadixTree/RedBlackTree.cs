@@ -109,30 +109,116 @@ namespace RadixTree
 
         /** Private Methods **************************************************/
         /// <summary>
+        /// Performs a post-deletion fixup on the Nodes in the tree, ensuring that the correct
+        /// amount of black exists on the path of the deleted Node.
+        /// 
+        /// Called by DeleteNode.
+        /// </summary>
+        private void DeleteFixup(Node current)
+        {
+            Node sibling;
+            while (current != this.Root && current.Color == NodeColor.Black)
+            {
+                if (current == current.Parent.Left)
+                {
+                    sibling = current.Parent.Right;
+                    if (sibling.Color == NodeColor.Red)
+                    {
+                        sibling.Color = NodeColor.Black;
+                        current.Parent.Color = NodeColor.Red;
+                        this.LeftRotate(current.Parent);
+                        sibling = current.Parent.Right;
+                    }
+                    if (sibling.Left.Color == NodeColor.Black && sibling.Right.Color == NodeColor.Black)
+                    {
+                        sibling.Color = NodeColor.Red;
+                        current = current.Parent;
+                    }
+                    else if (sibling.Right.Color == NodeColor.Black)
+                    {
+                        sibling.Left.Color = NodeColor.Black;
+                        sibling.Color = NodeColor.Red;
+                        this.RightRotate(sibling);
+                        sibling = current.Parent.Right;
+                    }
+                    sibling.Color = current.Parent.Color;
+                    current.Parent.Color = NodeColor.Black;
+                    sibling.Right.Color = NodeColor.Black;
+                    this.LeftRotate(current.Parent);
+                    current = this.Root;
+                }
+                else
+                {
+                    sibling = current.Parent.Left;
+                    if (sibling.Color == NodeColor.Red)
+                    {
+                        sibling.Color = NodeColor.Black;
+                        current.Parent.Color = NodeColor.Red;
+                        this.RightRotate(current.Parent);
+                        sibling = current.Parent.Left;
+                    }
+                    if (sibling.Right.Color == NodeColor.Black && sibling.Left.Color == NodeColor.Black)
+                    {
+                        sibling.Color = NodeColor.Red;
+                        current = current.Parent;
+                    }
+                    else if (sibling.Left.Color == NodeColor.Black)
+                    {
+                        sibling.Right.Color = NodeColor.Black;
+                        sibling.Color = NodeColor.Red;
+                        this.LeftRotate(sibling);
+                        sibling = current.Parent.Left;
+                    }
+                    sibling.Color = current.Parent.Color;
+                    current.Parent.Color = NodeColor.Black;
+                    sibling.Left.Color = NodeColor.Black;
+                    this.RightRotate(current.Parent);
+                    current = this.Root;
+                }
+            }
+        }
+
+        /// <summary>
         /// Removes a Node from the tree, replacing it with one of its children as needed.
         /// </summary>
         private void DeleteNode(Node toDelete)
         {
+            Node y = toDelete;
+            Node x;
+            NodeColor yOriginalColor = y.Color;
             if (toDelete.Left == this.Nil) // 0 children or only right child.
             {
+                x = toDelete.Right;
                 Transplant(toDelete, toDelete.Right);
             }
             else if (toDelete.Right == this.Nil) // Only left child.
             {
+                x = toDelete.Left;
                 Transplant(toDelete, toDelete.Left);
             }
             else // Left and Right child. Replace toDelete with its successor.
             {
-                Node successor = toDelete.Minimum();
-                if (successor.Parent != toDelete)
+                y = toDelete.Right.Minimum();
+                yOriginalColor = y.Color;
+                x = y.Right;
+                if(y.Parent == toDelete)
                 {
-                    Transplant(successor, successor.Right);
-                    successor.Right = toDelete.Right;
-                    successor.Right.Parent = successor;
+                    x.Parent = y;
                 }
-                Transplant(toDelete, successor);
-                successor.Left = toDelete.Left;
-                successor.Left.Parent = successor;
+                else
+                {
+                    Transplant(y, y.Right);
+                    y.Right = toDelete.Right;
+                    y.Right.Parent = y;
+                }
+                Transplant(toDelete, y);
+                y.Left = toDelete.Left;
+                y.Left.Parent = y;
+                y.Color = toDelete.Color;
+            }
+            if (yOriginalColor == NodeColor.Black)
+            {
+                this.DeleteFixup(x);
             }
         }
 
@@ -281,7 +367,7 @@ namespace RadixTree
         /// </summary>
         private void Transplant(Node current, Node replacement)
         {
-            if (current == this.Root) // Replacing the Root node.
+            if (current.Parent == this.Nil) // Replacing the Root node.
             {
                 this.Root = replacement;
             }
@@ -293,10 +379,7 @@ namespace RadixTree
             {
                 current.Parent.Right = replacement;
             }
-            if (replacement != this.Nil) // Update the parent of the replacement node
-            {
-                replacement.Parent = current.Parent;
-            } 
+            replacement.Parent = current.Parent;
         }
 
         /*** Instance Variables **********************************************/

@@ -17,16 +17,24 @@ namespace RadixTree
             {
                 dictionary.Insert(key);
             }
+            Console.WriteLine("Expecting True");
             foreach (var key in testers)
             {
                 Console.WriteLine(dictionary.Search(key));
             }
+            Console.WriteLine("Expecting False");
             Console.WriteLine(dictionary.Search("0"));
             Console.WriteLine(dictionary.Search("e"));
             Console.WriteLine(dictionary.Search("bb"));
 
-            Console.WriteLine(dictionary.Search("b"));
-            Console.WriteLine(dictionary.Search("a"));
+            foreach (var key in testers)
+            {
+                dictionary.Delete(key);
+            }
+            foreach (var key in testers)
+            {
+                Console.WriteLine(dictionary.Search(key));
+            }
         }
     }
 }
