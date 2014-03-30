@@ -10,31 +10,18 @@ namespace RadixTree
     {
         static void Main(string[] args)
         {
-            StringDictionary dictionary = new RedBlackTree();
-            string[] testers = {"a", "b", "c", "d", "a"};
-
-            foreach (var key in testers)
+            StringDictionary dictionary = new PatriciaTree();
+            string[] inserted = {"romane", "romanus", "romulus", "rubens"};
+            string[] all = {"romane", "romanus", "romulus", "rubens", "ruber", "rubicon", "rubicundus" };
+            foreach (var key in inserted)
             {
                 dictionary.Insert(key);
             }
-            Console.WriteLine("Expecting True");
-            foreach (var key in testers)
+            foreach(var key in all)
             {
                 Console.WriteLine(dictionary.Search(key));
             }
-            Console.WriteLine("Expecting False");
-            Console.WriteLine(dictionary.Search("0"));
-            Console.WriteLine(dictionary.Search("e"));
-            Console.WriteLine(dictionary.Search("bb"));
 
-            foreach (var key in testers)
-            {
-                dictionary.Delete(key);
-            }
-            foreach (var key in testers)
-            {
-                Console.WriteLine(dictionary.Search(key));
-            }
         }
     }
 }
