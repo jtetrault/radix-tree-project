@@ -22,45 +22,8 @@ namespace RadixTree
         /// </summary>
         public bool Search(String key)
         {
-            PatriciaNode currentNode = this.Root;
-            PatriciaEdge currentEdge = null;
-            string partialKey = key;
-            bool result = false;
-
-            while (partialKey != null)
-            {
-                if (partialKey.Length > 0)
-                {
-                    int index = CharacterToIndex(partialKey.ElementAt(0));
-                    currentEdge = currentNode.ChildEdges[index];
-                }
-                else // We have consumed the entire key. Check if we are looking at a Terminator node.
-                {
-                    result = currentNode.Terminator;
-                }
-
-                // If we have consumed the key and are looking at a terminator node, then the key exists.
-                if (currentEdge != null)
-                {
-                    // If the edge label matches part of the partialKey, then traverse that edge.
-                    if (partialKey.StartsWith(currentEdge.Label))
-                    {
-                        partialKey = partialKey.Substring(currentEdge.Label.Length);
-                        currentNode = currentEdge.ChildNode;
-                        currentEdge = null;
-                    }
-                    else
-                    {
-                        partialKey = null;
-                    }
-                }
-                else
-                {
-                    partialKey = null;
-                }
-            }
-
-            return result;
+            PatriciaNode resultNode = this.SearchNode(key);
+            return resultNode != null ? resultNode.Terminator : false;
         }
 
         /// <summary>
@@ -68,6 +31,11 @@ namespace RadixTree
         /// </summary>
         public void Insert(String key)
         {
+            if (key == null || key.Length == 0)
+            {
+                throw new Exception(String.Format("Invalid value for key: {0}", key));
+            }
+
             PatriciaNode currentNode = this.Root;
             PatriciaEdge currentEdge = null;
             string partialKey = key;
@@ -100,7 +68,7 @@ namespace RadixTree
                         // Count the number of matching chars at the start of partialKey and Label.
                         for (int i = 0; i < length; i++)
                         {
-                            if (currentEdge.Label.ElementAt(i) == partialKey.ElementAt(i))
+                            if (currentEdge.Label[i] == partialKey[i])
                             {
                                 matching++;
                             }
@@ -132,9 +100,16 @@ namespace RadixTree
 
         }
 
+        /// <summary>
+        /// Remove a key from the tree, if it exists.
+        /// </summary>
         public void Delete(String key)
         {
-
+            PatriciaNode toDelete = this.SearchNode(key);
+            if (toDelete != null && toDelete.Terminator)
+            {
+                this.DeleteNode(toDelete);
+            }
         }
 
         public String Predecessor(String key)
@@ -145,6 +120,88 @@ namespace RadixTree
         public String Successor(String key)
         {
             return null;
+        }
+
+        /*** Private Methods *************************************************/
+
+        private void DeleteNode(PatriciaNode toDelete)
+        {
+            int numChildren = toDelete.NumberOfChildren;
+            int index = CharacterToIndex(toDelete.ParentEdge.Label[0]);
+            PatriciaNode parentNode = toDelete.ParentEdge.ParentNode;
+            if (numChildren == 0)  // No children: the node is a leaf.
+            {
+                parentNode.ChildEdges[index] = null;
+                if (!parentNode.Terminator && parentNode != this.Root && parentNode.NumberOfChildren == 1)
+                {
+                    PatriciaEdge childEdge = parentNode.ChildEdges.First(edge => edge != null);
+                    string label = parentNode.ParentEdge.Label + childEdge.Label;
+                    JoinNodes(parentNode.ParentEdge.ParentNode, childEdge.ChildNode, label);
+                }
+            }
+            else if (numChildren == 1)
+            {
+                PatriciaEdge childEdge = toDelete.ChildEdges.First(edge => edge != null);
+                string label = toDelete.ParentEdge.Label + childEdge.Label;
+                JoinNodes(toDelete.ParentEdge.ParentNode, childEdge.ChildNode, label);
+            }
+            else
+            {
+                toDelete.Terminator = false;
+            }
+        }
+
+        /// <summary>
+        /// Search the tree for a node matching the given key. If a node is found, return it.
+        /// Otherwise return null.
+        /// </summary>
+        private PatriciaNode SearchNode(string key)
+        {
+            if (key == null || key.Length == 0)
+            {
+                throw new Exception(String.Format("Invalid value for key: {0}", key));
+            }
+            PatriciaNode currentNode = this.Root;
+            PatriciaEdge currentEdge = null;
+            string partialKey = key;
+            PatriciaNode result = null;
+
+            while (partialKey != null)
+            {
+                if (partialKey.Length > 0)
+                {
+                    int index = CharacterToIndex(partialKey[0]);
+                    currentEdge = currentNode.ChildEdges[index];
+                }
+                else // We have consumed the entire key. Check if we are looking at a Terminator node.
+                {
+                    result = currentNode;
+                }
+
+                // If we have consumed the key and are looking at a terminator node, then the key exists.
+                if (currentEdge != null)
+                {
+                    // If the edge label matches part of the partialKey, then traverse that edge.
+                    if (partialKey.StartsWith(currentEdge.Label))
+                    {
+                        partialKey = partialKey.Substring(currentEdge.Label.Length);
+                        currentNode = currentEdge.ChildNode;
+                        currentEdge = null;
+                    }
+                    // Without a match, we are stuck and the key does not exist in the tree.
+                    else
+                    {
+                        partialKey = null;
+                    }
+                }
+                // Without an edge to attempt to traverse, we are stuck and the key does not exist in the tree.
+                else
+                {
+                    partialKey = null;
+                }
+            }
+
+            return result;
         }
 
         /*** Instance Variables **********************************************/
@@ -158,7 +215,7 @@ namespace RadixTree
         {
             if (key < 'a' || key > 'z')
             {
-                throw new Exception(String.Format("Invalid key '{0}': must be between a and z", key));
+                throw new Exception(String.Format("Invalid key '{0}': must be between a and z\nValue: {1}", key, key - 'a'));
             }
             return key - 'a';
         }
@@ -197,6 +254,11 @@ namespace RadixTree
         /// The Edges below this Node in the tree.
         /// </summary>
         public PatriciaEdge[] ChildEdges { get; set; }
+
+        /// <summary>
+        /// Return the number of non-null ChildEdges stored at this node.
+        /// </summary>
+        public int NumberOfChildren { get { return ChildEdges.Count(edge => edge != null); } }
 
         /// <summary>
         /// Indicates whether a search that ends at this node is successful.
