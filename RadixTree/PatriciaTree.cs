@@ -52,8 +52,8 @@ namespace RadixTreeProject.Patricia
                 }
                 else
                 {
-                    index = CharacterToIndex(partialKey[0]);
-                    currentEdge = currentNode.ChildEdges[index];
+
+                    currentEdge = currentNode.GetChildEdgeOrNull(partialKey[0]);
                     if (currentEdge == null)  // No substrings starting with this letter exit this node yet.
                     {
                         // Create a new edge from this node, assign its label, and assign the child node as a terminator.
@@ -112,6 +112,7 @@ namespace RadixTreeProject.Patricia
             {
                 this.DeleteNode(toDelete);
             }
+            else throw new Exception(String.Format("Unable to delete key {0}", key));
         }
 
         public String Predecessor(String key)
@@ -134,17 +135,16 @@ namespace RadixTreeProject.Patricia
             // Removes a node that falls between two other nodes, joining the parent and child directly.
             Action<Node> removeIntermediateNode = (node) =>
             {
-                Edge childEdge = node.ChildEdges.First(edge => edge != null);
+                Edge childEdge = node.ChildEdges.First().Value;
                 string label = node.ParentEdge.Label + childEdge.Label;
                 JoinNodes(node.ParentNode, childEdge.ChildNode, label);
             };
 
             int numChildren = toDelete.NumberOfChildren;
-            int index = CharacterToIndex(toDelete.ParentEdge.Label[0]);
             Node parentNode = toDelete.ParentNode;
             if (numChildren == 0)  // No children: the node is a leaf.
             {
-                parentNode.ChildEdges[index] = null;
+                parentNode.ChildEdges.Remove(toDelete.ParentEdge.Label[0]);
                 if (!parentNode.Terminator && parentNode != this.Root && parentNode.NumberOfChildren == 1)
                 {
                     removeIntermediateNode(parentNode);
@@ -152,7 +152,7 @@ namespace RadixTreeProject.Patricia
             }
             else if (numChildren == 1) // Node has one child: join its parent and child directly.
             {
-                removeIntermediateNode(parentNode);
+                removeIntermediateNode(toDelete);
             }
             else // Node has many children. Remove its Terminator flag so that it no longer represents a key.
             {
@@ -179,8 +179,7 @@ namespace RadixTreeProject.Patricia
             {
                 if (partialKey.Length > 0)
                 {
-                    int index = CharacterToIndex(partialKey[0]);
-                    currentEdge = currentNode.ChildEdges[index];
+                    currentEdge = currentNode.GetChildEdgeOrNull(partialKey[0]);
                 }
                 else // We have consumed the entire key. Check if we are looking at a Terminator node.
                 {
@@ -246,8 +245,7 @@ namespace RadixTreeProject.Patricia
             edge.Label = label;
 
             // Assign parent node value.
-            int index = CharacterToIndex(label[0]);
-            parent.ChildEdges[index] = edge;
+            parent.ChildEdges[label[0]] = edge;
 
             // Assign child node value.
             child.ParentEdge = edge;
@@ -260,7 +258,15 @@ namespace RadixTreeProject.Patricia
         /*** Public Interface ************************************************/
         public Node()
         {
-            this.ChildEdges = new Edge[26];
+            this.ChildEdges = new Dictionary<char, Edge>(1);
+        }
+
+        /// <summary>
+        /// Return the child edge that matches the given key, or null if there is none.
+        /// </summary>
+        public Edge GetChildEdgeOrNull(char key)
+        {
+            return this.ChildEdges.ContainsKey(key) ? this.ChildEdges[key] : null;
         }
 
         /*** Instance Variables **********************************************/
@@ -272,12 +278,12 @@ namespace RadixTreeProject.Patricia
         /// <summary>
         /// The Edges below this Node in the tree.
         /// </summary>
-        public Edge[] ChildEdges { get; set; }
+        public Dictionary<char, Edge> ChildEdges { get; set; }
 
         /// <summary>
         /// Return the number of non-null ChildEdges stored at this node.
         /// </summary>
-        public int NumberOfChildren { get { return ChildEdges.Count(edge => edge != null); } }
+        public int NumberOfChildren { get { return ChildEdges.Count; } }
 
         /// <summary>
         /// Indicates whether a search that ends at this node is successful.
