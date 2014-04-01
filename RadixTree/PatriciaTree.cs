@@ -123,29 +123,36 @@ namespace RadixTree
         }
 
         /*** Private Methods *************************************************/
-
+        /// <summary>
+        /// Remove the key accessed by the given node from the tree.
+        /// Also perform post removal fixups, such as deleting nodes that are no longer necessary.
+        /// </summary>
         private void DeleteNode(PatriciaNode toDelete)
         {
+            // Removes a node that falls between two other nodes, joining the parent and child directly.
+            Action<PatriciaNode> removeIntermediateNode = (node) =>
+            {
+                PatriciaEdge childEdge = node.ChildEdges.First(edge => edge != null);
+                string label = node.ParentEdge.Label + childEdge.Label;
+                JoinNodes(node.ParentNode, childEdge.ChildNode, label);
+            };
+
             int numChildren = toDelete.NumberOfChildren;
             int index = CharacterToIndex(toDelete.ParentEdge.Label[0]);
-            PatriciaNode parentNode = toDelete.ParentEdge.ParentNode;
+            PatriciaNode parentNode = toDelete.ParentNode;
             if (numChildren == 0)  // No children: the node is a leaf.
             {
                 parentNode.ChildEdges[index] = null;
                 if (!parentNode.Terminator && parentNode != this.Root && parentNode.NumberOfChildren == 1)
                 {
-                    PatriciaEdge childEdge = parentNode.ChildEdges.First(edge => edge != null);
-                    string label = parentNode.ParentEdge.Label + childEdge.Label;
-                    JoinNodes(parentNode.ParentEdge.ParentNode, childEdge.ChildNode, label);
+                    removeIntermediateNode(parentNode);
                 }
             }
-            else if (numChildren == 1)
+            else if (numChildren == 1) // Node has one child: join its parent and child directly.
             {
-                PatriciaEdge childEdge = toDelete.ChildEdges.First(edge => edge != null);
-                string label = toDelete.ParentEdge.Label + childEdge.Label;
-                JoinNodes(toDelete.ParentEdge.ParentNode, childEdge.ChildNode, label);
+                removeIntermediateNode(parentNode);
             }
-            else
+            else // Node has many children. Remove its Terminator flag so that it no longer represents a key.
             {
                 toDelete.Terminator = false;
             }
@@ -205,6 +212,9 @@ namespace RadixTree
         }
 
         /*** Instance Variables **********************************************/
+        /// <summary>
+        /// The root of the Tree.
+        /// </summary>
         private PatriciaNode Root { get; set; }
 
         /*** Class Methods ***************************************************/
@@ -220,6 +230,11 @@ namespace RadixTree
             return key - 'a';
         }
 
+        /// <summary>
+        /// Create a new edge joining parent and child nodes.
+        /// 
+        /// Place the edge in the correct array index based on the value of label.
+        /// </summary>
         private static void JoinNodes(PatriciaNode parent, PatriciaNode child, string label)
         {
             // Assign edge values.
@@ -238,13 +253,15 @@ namespace RadixTree
 
     }
 
-    public class PatriciaNode
+    internal class PatriciaNode
     {
         /*** Public Interface ************************************************/
         public PatriciaNode()
         {
             this.ChildEdges = new PatriciaEdge[26];
         }
+
+        /*** Instance Variables **********************************************/
         /// <summary>
         /// The edge above this Node in the Tree.
         /// </summary>
@@ -264,13 +281,23 @@ namespace RadixTree
         /// Indicates whether a search that ends at this node is successful.
         /// </summary>
         public bool Terminator { get; set; }
+
+        /// <summary>
+        /// The node at the other end of ParentEdge.
+        /// </summary>
+        public PatriciaNode ParentNode
+        {
+            get { return ParentEdge.ParentNode; }
+            set { ParentEdge.ParentNode = value; }
+        }
     }
 
     /// <summary>
     /// An edge between two Nodes, with a string label.
     /// </summary>
-    public class PatriciaEdge
+    class PatriciaEdge
     {
+        /*** Instance Variables **********************************************/
         public string Label { get; set; }
 
         /// <summary>

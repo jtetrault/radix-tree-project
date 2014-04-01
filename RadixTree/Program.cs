@@ -58,6 +58,10 @@ namespace RadixTree
             {
                 dictionary.Delete(word);
             }
+            foreach (var word in halfers)
+            {
+                dictionary.Delete(word);
+            }
             foreach(var word in testers)
             {
                 Console.WriteLine(dictionary.Search(word));
