@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RadixTree
+using RadixTreeProject;
+
+namespace RadixTreeProject.Patricia
 {
     public class PatriciaTree : StringDictionary
     {
@@ -14,7 +16,7 @@ namespace RadixTree
         /// </summary>
         public PatriciaTree()
         {
-            this.Root = new PatriciaNode();
+            this.Root = new Node();
         }
 
         /// <summary>
@@ -22,7 +24,7 @@ namespace RadixTree
         /// </summary>
         public bool Search(String key)
         {
-            PatriciaNode resultNode = this.SearchNode(key);
+            Node resultNode = this.SearchNode(key);
             return resultNode != null ? resultNode.Terminator : false;
         }
 
@@ -36,8 +38,8 @@ namespace RadixTree
                 throw new Exception(String.Format("Invalid value for key: {0}", key));
             }
 
-            PatriciaNode currentNode = this.Root;
-            PatriciaEdge currentEdge = null;
+            Node currentNode = this.Root;
+            Edge currentEdge = null;
             string partialKey = key;
             int index;
             while (partialKey != null)
@@ -55,7 +57,7 @@ namespace RadixTree
                     if (currentEdge == null)  // No substrings starting with this letter exit this node yet.
                     {
                         // Create a new edge from this node, assign its label, and assign the child node as a terminator.
-                        PatriciaNode childNode = new PatriciaNode();
+                        Node childNode = new Node();
                         childNode.Terminator = true;
                         JoinNodes(currentNode, childNode, partialKey);
                         partialKey = null;
@@ -84,7 +86,7 @@ namespace RadixTree
                         {
                             string upperLabel = currentEdge.Label.Substring(0, matching);
                             string lowerLabel = currentEdge.Label.Substring(matching);
-                            PatriciaNode splittingNode = new PatriciaNode();
+                            Node splittingNode = new Node();
                             
                             // Join upper and splittingNode. currentEdge gets implicitly removed from currentNode's ChildEdges.
                             JoinNodes(currentNode, splittingNode, upperLabel);
@@ -105,7 +107,7 @@ namespace RadixTree
         /// </summary>
         public void Delete(String key)
         {
-            PatriciaNode toDelete = this.SearchNode(key);
+            Node toDelete = this.SearchNode(key);
             if (toDelete != null && toDelete.Terminator)
             {
                 this.DeleteNode(toDelete);
@@ -127,19 +129,19 @@ namespace RadixTree
         /// Remove the key accessed by the given node from the tree.
         /// Also perform post removal fixups, such as deleting nodes that are no longer necessary.
         /// </summary>
-        private void DeleteNode(PatriciaNode toDelete)
+        private void DeleteNode(Node toDelete)
         {
             // Removes a node that falls between two other nodes, joining the parent and child directly.
-            Action<PatriciaNode> removeIntermediateNode = (node) =>
+            Action<Node> removeIntermediateNode = (node) =>
             {
-                PatriciaEdge childEdge = node.ChildEdges.First(edge => edge != null);
+                Edge childEdge = node.ChildEdges.First(edge => edge != null);
                 string label = node.ParentEdge.Label + childEdge.Label;
                 JoinNodes(node.ParentNode, childEdge.ChildNode, label);
             };
 
             int numChildren = toDelete.NumberOfChildren;
             int index = CharacterToIndex(toDelete.ParentEdge.Label[0]);
-            PatriciaNode parentNode = toDelete.ParentNode;
+            Node parentNode = toDelete.ParentNode;
             if (numChildren == 0)  // No children: the node is a leaf.
             {
                 parentNode.ChildEdges[index] = null;
@@ -162,16 +164,16 @@ namespace RadixTree
         /// Search the tree for a node matching the given key. If a node is found, return it.
         /// Otherwise return null.
         /// </summary>
-        private PatriciaNode SearchNode(string key)
+        private Node SearchNode(string key)
         {
             if (key == null || key.Length == 0)
             {
                 throw new Exception(String.Format("Invalid value for key: {0}", key));
             }
-            PatriciaNode currentNode = this.Root;
-            PatriciaEdge currentEdge = null;
+            Node currentNode = this.Root;
+            Edge currentEdge = null;
             string partialKey = key;
-            PatriciaNode result = null;
+            Node result = null;
 
             while (partialKey != null)
             {
@@ -215,7 +217,7 @@ namespace RadixTree
         /// <summary>
         /// The root of the Tree.
         /// </summary>
-        private PatriciaNode Root { get; set; }
+        private Node Root { get; set; }
 
         /*** Class Methods ***************************************************/
         /// <summary>
@@ -235,10 +237,10 @@ namespace RadixTree
         /// 
         /// Place the edge in the correct array index based on the value of label.
         /// </summary>
-        private static void JoinNodes(PatriciaNode parent, PatriciaNode child, string label)
+        private static void JoinNodes(Node parent, Node child, string label)
         {
             // Assign edge values.
-            PatriciaEdge edge = new PatriciaEdge();
+            Edge edge = new Edge();
             edge.ParentNode = parent;
             edge.ChildNode = child;
             edge.Label = label;
@@ -253,24 +255,24 @@ namespace RadixTree
 
     }
 
-    internal class PatriciaNode
+    class Node
     {
         /*** Public Interface ************************************************/
-        public PatriciaNode()
+        public Node()
         {
-            this.ChildEdges = new PatriciaEdge[26];
+            this.ChildEdges = new Edge[26];
         }
 
         /*** Instance Variables **********************************************/
         /// <summary>
         /// The edge above this Node in the Tree.
         /// </summary>
-        public PatriciaEdge ParentEdge { get; set; }
+        public Edge ParentEdge { get; set; }
 
         /// <summary>
         /// The Edges below this Node in the tree.
         /// </summary>
-        public PatriciaEdge[] ChildEdges { get; set; }
+        public Edge[] ChildEdges { get; set; }
 
         /// <summary>
         /// Return the number of non-null ChildEdges stored at this node.
@@ -285,7 +287,7 @@ namespace RadixTree
         /// <summary>
         /// The node at the other end of ParentEdge.
         /// </summary>
-        public PatriciaNode ParentNode
+        public Node ParentNode
         {
             get { return ParentEdge.ParentNode; }
             set { ParentEdge.ParentNode = value; }
@@ -295,7 +297,7 @@ namespace RadixTree
     /// <summary>
     /// An edge between two Nodes, with a string label.
     /// </summary>
-    class PatriciaEdge
+    class Edge
     {
         /*** Instance Variables **********************************************/
         public string Label { get; set; }
@@ -303,11 +305,11 @@ namespace RadixTree
         /// <summary>
         /// The Node above this Edge in the tree.
         /// </summary>
-        public PatriciaNode ParentNode { get; set; }
+        public Node ParentNode { get; set; }
 
         /// <summary>
         /// The Node below this Edge in the tree.
         /// </summary>
-        public PatriciaNode ChildNode { get; set; }
+        public Node ChildNode { get; set; }
     }
 }

@@ -5,7 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RadixTree
+using RadixTreeProject.Patricia;
+using RadixTreeProject.RedBlack;
+
+namespace RadixTreeProject
 {
     class Program
     {

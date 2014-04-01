@@ -7,8 +7,8 @@
     <ProjectGuid>{381015C3-CDEF-4FBD-9241-48CE29336657}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RadixTree</RootNamespace>
-    <AssemblyName>RadixTree</AssemblyName>
+    <RootNamespace>RadixTreeProject</RootNamespace>
+    <AssemblyName>RadixTreeProject</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
