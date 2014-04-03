@@ -18,7 +18,7 @@ namespace RadixTreeProject.RedBlack
         /// </summary>
         public RedBlackTree()
         {
-            this.Nil = new Node(null);
+            this.Nil = new Node(null, this);
             this.Nil.Left = this.Nil;
             this.Nil.Right = this.Nil;
             this.Nil.Color = NodeColor.Black;
@@ -62,7 +62,7 @@ namespace RadixTreeProject.RedBlack
                 return;
             }
 
-            toInsert = new Node(key);
+            toInsert = new Node(key, this);
             toInsert.Parent = previous;
 
             if (previous == this.Nil) // Empty Tree.
@@ -116,8 +116,9 @@ namespace RadixTreeProject.RedBlack
         /// 
         /// Called by DeleteNode.
         /// </summary>
-        private void DeleteFixup(Node current)
+        private void DeleteFixup(Node start)
         {
+            Node current = start;
             Node sibling;
             while (current != this.Root && current.Color == NodeColor.Black)
             {
@@ -136,18 +137,21 @@ namespace RadixTreeProject.RedBlack
                         sibling.Color = NodeColor.Red;
                         current = current.Parent;
                     }
-                    else if (sibling.Right.Color == NodeColor.Black)
+                    else
                     {
-                        sibling.Left.Color = NodeColor.Black;
-                        sibling.Color = NodeColor.Red;
-                        this.RightRotate(sibling);
-                        sibling = current.Parent.Right;
+                        if (sibling.Right.Color == NodeColor.Black)
+                        {
+                            sibling.Left.Color = NodeColor.Black;
+                            sibling.Color = NodeColor.Red;
+                            this.RightRotate(sibling);
+                            sibling = current.Parent.Right;
+                        }
+                        sibling.Color = current.Parent.Color;
+                        current.Parent.Color = NodeColor.Black;
+                        sibling.Right.Color = NodeColor.Black;
+                        this.LeftRotate(current.Parent);
+                        current = this.Root;
                     }
-                    sibling.Color = current.Parent.Color;
-                    current.Parent.Color = NodeColor.Black;
-                    sibling.Right.Color = NodeColor.Black;
-                    this.LeftRotate(current.Parent);
-                    current = this.Root;
                 }
                 else
                 {
@@ -164,20 +168,24 @@ namespace RadixTreeProject.RedBlack
                         sibling.Color = NodeColor.Red;
                         current = current.Parent;
                     }
-                    else if (sibling.Left.Color == NodeColor.Black)
+                    else
                     {
-                        sibling.Right.Color = NodeColor.Black;
-                        sibling.Color = NodeColor.Red;
-                        this.LeftRotate(sibling);
-                        sibling = current.Parent.Left;
+                        if (sibling.Left.Color == NodeColor.Black)
+                        {
+                            sibling.Right.Color = NodeColor.Black;
+                            sibling.Color = NodeColor.Red;
+                            this.LeftRotate(sibling);
+                            sibling = current.Parent.Left;
+                        }
+                        sibling.Color = current.Parent.Color;
+                        current.Parent.Color = NodeColor.Black;
+                        sibling.Left.Color = NodeColor.Black;
+                        this.RightRotate(current.Parent);
+                        current = this.Root;
                     }
-                    sibling.Color = current.Parent.Color;
-                    current.Parent.Color = NodeColor.Black;
-                    sibling.Left.Color = NodeColor.Black;
-                    this.RightRotate(current.Parent);
-                    current = this.Root;
                 }
             }
+            current.Color = NodeColor.Black;
         }
 
         /// <summary>
@@ -357,7 +365,6 @@ namespace RadixTreeProject.RedBlack
                     current = current.Right;
                 }
             }
-
             return current;
         }
 
@@ -394,7 +401,7 @@ namespace RadixTreeProject.RedBlack
         /// <summary>
         /// A sentinel Node used as a placeholder for null.
         /// </summary>
-        private Node Nil { get; set; }
+        public Node Nil { get; set; }
 
         /// <summary>
         /// The number of keys stored in the Red Black Tree.
@@ -409,10 +416,11 @@ namespace RadixTreeProject.RedBlack
         /// Creates a Node instance with null Parent, Left and Right pointers,
         /// with its Key set to key.
         /// </summary>
-        public Node(String key)
+        public Node(String key, RedBlackTree tree)
         {
             this.Key = key;
             this.Color = NodeColor.Red;
+            this.Tree = tree;
         }
 
         /// <summary>
@@ -421,7 +429,7 @@ namespace RadixTreeProject.RedBlack
         public Node Minimum()
         {
             Node current = this;
-            while (current.Left != null)
+            while (current.Left != this.Tree.Nil)
             {
                 current = current.Left;
             }
@@ -453,5 +461,11 @@ namespace RadixTreeProject.RedBlack
         /// The current color of this Node.
         /// </summary>
         public NodeColor Color { get; set; }
+
+        /// <summary>
+        /// The tree that this node belongs to.
+        /// </summary>
+        public RedBlackTree Tree { get; set; }
+
     }
 }
