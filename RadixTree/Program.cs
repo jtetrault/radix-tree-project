@@ -15,39 +15,62 @@ namespace RadixTreeProject
     {
         static void Main(string[] args)
         {
-            StressTest("..\\..\\us.dic");
-        }
-
-        static void StressTest(string fileName)
-        {
-            StringDictionary dictionary = new PatriciaTree();
-            LinkedList<string> words = new LinkedList<string>();
-            try
+            if (args.Length == 1)
             {
-                using (StreamReader reader = new StreamReader(fileName))
+                string fileName = args[0];
+
+                LinkedList<string> words = new LinkedList<string>();
+                try
                 {
-                    string line = reader.ReadLine();
-                    while (line != null)
+                    using (StreamReader reader = new StreamReader(fileName))
                     {
-                        words.AddLast(line);
-                        dictionary.Insert(line);
-                        line = reader.ReadLine();
+                        string line = reader.ReadLine();
+                        while (line != null)
+                        {
+                            words.AddLast(line);
+                            line = reader.ReadLine();
+                        }
                     }
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine("The file could not be read:");
+                    Console.WriteLine(e.Message);
+                }
+
+                StringDictionary dictionary1 = new RedBlackTree();
+                StringDictionary dictionary2 = new PatriciaTree();
+                Action toTime1 = () =>
+                {
+                    StressTest(words, dictionary1);
+                };
+                Action toTime2 = () =>
+                {
+                    StressTest(words, dictionary2);
+                };
+                long time1 = Time(toTime1);
+                long time2 = Time(toTime2);
+
+                Console.WriteLine(String.Format("RedBlackTree: {0}", time1));
+                Console.WriteLine(String.Format("PatriciaTree: {0}", time2));
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine("The file could not be read:");
-                Console.WriteLine(e.Message);
+                Console.WriteLine(String.Format("Usage: {0}. <path_to_text_file>", Process.GetCurrentProcess().ProcessName));
             }
-            string prevWord = "huehue";
+        }
+
+        static void StressTest(LinkedList<string> words, StringDictionary dictionary)
+        {
+            foreach (var word in words)
+            {
+                dictionary.Insert(word);
+            }
             foreach (var word in words)
             {
                 // Console.WriteLine(String.Format("{0}: {1}", word, dictionary.Search(word)));
                 Debug.Assert(dictionary.Search(word), String.Format("Failed to find inserted word {0}", word));
                 // Console.WriteLine(String.Format("{0}: {1}", word + prevWord, dictionary.Search(word + prevWord)));
-                Debug.Assert(!dictionary.Search(word + prevWord), String.Format("Erroneously found non-inserted word {0}", word + prevWord));
-                prevWord = word.ToUpper();
             }
             foreach(var word in words)
             {
@@ -82,6 +105,15 @@ namespace RadixTreeProject
             {
                 Console.WriteLine(dictionary.Search(word));
             }
+        }
+
+        static long Time(Action toTime)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            toTime();
+            stopwatch.Stop();
+            return stopwatch.ElapsedMilliseconds;
         }
     }
 }
