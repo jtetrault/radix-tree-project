@@ -1,0 +1,23 @@
+﻿insert:
+	while partialKey not consumed (not null):
+		if no matching child edge:
+			create new edge with partialKey label
+			create new node assigned to partialEdge
+			set partialKey consumed
+		else:
+			consume partialKey with currentEdge.Label
+			if label is fully consumed:
+				use remainder of partial key on next node: iterate
+			else:
+				split currentEdge into two edges upperEdge and lowerEdge
+				upperEdge.label ← currentEdge.label[0:matching]
+				lowerEdge.label ← currentEdge.label[matching:]
+				create a new node splitNode
+				upperEdge.childNode ← splitNode
+				splitNode.childNodes[] ← lowerEdge
+				create a new node insertedNode
+				create a new edge insertedEdge
+				insertedEdge.label ← partialKey[:matching]
+				insertedEdge.child = insertedNode
+				terminate all
+				partialKey ← null
