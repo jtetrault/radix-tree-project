@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using RadixTreeProject.Patricia;
+using RadixTreeProject.AugmentedPatricia;
 using RadixTreeProject.RedBlack;
 
 namespace RadixTreeProject
@@ -39,7 +39,7 @@ namespace RadixTreeProject
                 }
 
                 StringDictionary dictionary1 = new RedBlackTree();
-                StringDictionary dictionary2 = new PatriciaTree();
+                StringDictionary dictionary2 = new AugmentedPatriciaTree();
 
                 Action toTime1 = () =>
                 {
@@ -105,7 +105,7 @@ namespace RadixTreeProject
 
         static void RubiconTest()
         {
-            StringDictionary dictionary = new PatriciaTree();
+            StringDictionary dictionary = new AugmentedPatriciaTree();
             string[] testers = { "romane", "romanus", "romulus", "rubens", "ruber", "rubicon", "rubicundus" };
             string[] halfers = { "romane", "romulus", "ruber", "rubicundus" };
 

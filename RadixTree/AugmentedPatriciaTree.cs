@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 using RadixTreeProject;
 
-namespace RadixTreeProject.Patricia
+namespace RadixTreeProject.AugmentedPatricia
 {
-    public class PatriciaTree : StringDictionary
+    public class AugmentedPatriciaTree : StringDictionary
     {
         /*** Public Interface ************************************************/
         /// <summary>
         /// Create a new, empty Patricia Tree.
         /// </summary>
-        public PatriciaTree()
+        public AugmentedPatriciaTree()
         {
             this.Root = new Node();
         }
