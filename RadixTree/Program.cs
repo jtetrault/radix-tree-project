@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using RadixTreeProject.AugmentedPatricia;
+using RadixTreeProject.Patricia;
 using RadixTreeProject.RedBlack;
 
 namespace RadixTreeProject
@@ -38,45 +39,33 @@ namespace RadixTreeProject
                     Console.WriteLine(e.Message);
                 }
 
-                StringDictionary dictionary1 = new RedBlackTree();
-                StringDictionary dictionary2 = new AugmentedPatriciaTree();
+                StringDictionary redBlack = new RedBlackTree();
+                StringDictionary patricia = new PatriciaTree();
+                StringDictionary augmentedPatricia = new AugmentedPatriciaTree();
 
-                Action toTime1 = () =>
-                {
-                    foreach (var word in words)
-                    {
-                        dictionary1.Insert(word);
-                    }
-                    StressTest(words, dictionary1);
-                    foreach (var word in words)
-                    {
-                        dictionary1.Delete(word);
-                    }
-                };
+                long redBlackTotalTime = 0;
+                long redBlackSearchTime = 0;
+                long patriciaTotalTime = 0;
+                long patriciaSearchTime = 0;
+                long augmentedPatriciaSearchTime = 0;
+                long augmentedPatriciaTotalTime = 0;
 
-                long time1 = Time(toTime1);
-                dictionary1 = null;
+                StressTest(words, redBlack, ref redBlackTotalTime, ref redBlackSearchTime);
+                redBlack = null;
                 System.GC.Collect();
 
-                Action toTime2 = () =>
-                {
-                    foreach (var word in words)
-                    {
-                        dictionary2.Insert(word);
-                    }
-                    StressTest(words, dictionary2);
-                    foreach (var word in words)
-                    {
-                        dictionary2.Delete(word);
-                    }
-                };
-
-                long time2 = Time(toTime2);
-                dictionary2 = null;
+                StressTest(words, patricia, ref patriciaTotalTime, ref patriciaSearchTime);
+                patricia = null;
                 System.GC.Collect();
 
-                Console.WriteLine(String.Format("RedBlackTree: {0}ms", time1));
-                Console.WriteLine(String.Format("PatriciaTree: {0}ms", time2));
+                StressTest(words, augmentedPatricia, ref augmentedPatriciaTotalTime, ref augmentedPatriciaSearchTime);
+                augmentedPatricia = null;
+                System.GC.Collect();
+
+                Console.WriteLine("{0,-24}{1,-20}{2,-20}", "Dictionary", "Total Time", "Search Time");
+                Console.WriteLine("{0,-24}{1,-20}{2,-20}", "RedBlackTree", redBlackTotalTime, redBlackSearchTime);
+                Console.WriteLine("{0,-24}{1,-20}{2,-20}", "PatriciaTree", patriciaTotalTime, patriciaSearchTime);
+                Console.WriteLine("{0,-24}{1,-20}{2,-20}", "AugmentedPatriciaTree", augmentedPatriciaTotalTime, augmentedPatriciaSearchTime);
             }
             else
             {
@@ -84,23 +73,30 @@ namespace RadixTreeProject
             }
         }
 
-        static void StressTest(LinkedList<string> words, StringDictionary dictionary)
+        static void StressTest(LinkedList<string> words, StringDictionary dictionary, ref long totalTime, ref long searchTime)
         {
+            Stopwatch totalStopwatch = new Stopwatch();
+            Stopwatch searchStopwatch = new Stopwatch();
+
+            totalStopwatch.Start();
+            foreach (var word in words)
+            {
+                dictionary.Insert(word);
+            }
+            searchStopwatch.Start();
             foreach (var word in words)
             {
                 dictionary.Search(word);
-                // Debug.Assert(dictionary.Search(word), String.Format("Failed to find inserted word {0}", word));
             }
-            /*foreach(var word in words)
+            searchStopwatch.Stop();
+            foreach(var word in words)
             {
                 dictionary.Delete(word);
             }
-             */
-/*           foreach(var word in words)
-            {
-                Debug.Assert(!dictionary.Search(word), "Erroneously found deleted word {0}", word);
-            }
- */
+            totalStopwatch.Stop();
+
+            totalTime = totalStopwatch.ElapsedMilliseconds;
+            searchTime = searchStopwatch.ElapsedMilliseconds;
         }
 
         static void RubiconTest()
@@ -125,15 +121,6 @@ namespace RadixTreeProject
             {
                 Console.WriteLine(dictionary.Search(word));
             }
-        }
-
-        static long Time(Action toTime)
-        {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            toTime();
-            stopwatch.Stop();
-            return stopwatch.ElapsedMilliseconds;
         }
     }
 }
