@@ -40,19 +40,43 @@ namespace RadixTreeProject
 
                 StringDictionary dictionary1 = new RedBlackTree();
                 StringDictionary dictionary2 = new PatriciaTree();
+
                 Action toTime1 = () =>
                 {
+                    foreach (var word in words)
+                    {
+                        dictionary1.Insert(word);
+                    }
                     StressTest(words, dictionary1);
+                    foreach (var word in words)
+                    {
+                        dictionary1.Delete(word);
+                    }
                 };
+
+                long time1 = Time(toTime1);
+                dictionary1 = null;
+                System.GC.Collect();
+
                 Action toTime2 = () =>
                 {
+                    foreach (var word in words)
+                    {
+                        dictionary2.Insert(word);
+                    }
                     StressTest(words, dictionary2);
+                    foreach (var word in words)
+                    {
+                        dictionary2.Delete(word);
+                    }
                 };
-                long time1 = Time(toTime1);
-                long time2 = Time(toTime2);
 
-                Console.WriteLine(String.Format("RedBlackTree: {0}", time1));
-                Console.WriteLine(String.Format("PatriciaTree: {0}", time2));
+                long time2 = Time(toTime2);
+                dictionary2 = null;
+                System.GC.Collect();
+
+                Console.WriteLine(String.Format("RedBlackTree: {0}ms", time1));
+                Console.WriteLine(String.Format("PatriciaTree: {0}ms", time2));
             }
             else
             {
@@ -64,23 +88,19 @@ namespace RadixTreeProject
         {
             foreach (var word in words)
             {
-                dictionary.Insert(word);
+                dictionary.Search(word);
+                // Debug.Assert(dictionary.Search(word), String.Format("Failed to find inserted word {0}", word));
             }
-            foreach (var word in words)
-            {
-                // Console.WriteLine(String.Format("{0}: {1}", word, dictionary.Search(word)));
-                Debug.Assert(dictionary.Search(word), String.Format("Failed to find inserted word {0}", word));
-                // Console.WriteLine(String.Format("{0}: {1}", word + prevWord, dictionary.Search(word + prevWord)));
-            }
-            foreach(var word in words)
+            /*foreach(var word in words)
             {
                 dictionary.Delete(word);
             }
-            foreach(var word in words)
+             */
+/*           foreach(var word in words)
             {
-                // Console.WriteLine(String.Format("{0}: {1}", word, dictionary.Search(word)));
                 Debug.Assert(!dictionary.Search(word), "Erroneously found deleted word {0}", word);
             }
+ */
         }
 
         static void RubiconTest()

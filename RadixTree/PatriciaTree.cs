@@ -41,7 +41,6 @@ namespace RadixTreeProject.Patricia
             Node currentNode = this.Root;
             Edge currentEdge = null;
             string partialKey = key;
-            int index;
             while (partialKey != null)
             {
                 if (partialKey.Length == 0)
@@ -99,7 +98,6 @@ namespace RadixTreeProject.Patricia
                     }
                 }
             }
-
         }
 
         /// <summary>
@@ -220,18 +218,6 @@ namespace RadixTreeProject.Patricia
 
         /*** Class Methods ***************************************************/
         /// <summary>
-        /// Given a key, returns an offset into an Node's array of edges.
-        /// </summary>
-        private static int CharacterToIndex(char key)
-        {
-            if (key < 'a' || key > 'z')
-            {
-                throw new Exception(String.Format("Invalid key '{0}': must be between a and z\nValue: {1}", key, key - 'a'));
-            }
-            return key - 'a';
-        }
-
-        /// <summary>
         /// Create a new edge joining parent and child nodes.
         /// 
         /// Place the edge in the correct array index based on the value of label.
@@ -258,7 +244,7 @@ namespace RadixTreeProject.Patricia
         /*** Public Interface ************************************************/
         public Node()
         {
-            this.ChildEdges = new Dictionary<char, Edge>(1);
+            this.ChildEdges = new Dictionary<char, Edge>(17);
         }
 
         /// <summary>
