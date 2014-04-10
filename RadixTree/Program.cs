@@ -98,29 +98,5 @@ namespace RadixTreeProject
             totalTime = totalStopwatch.ElapsedMilliseconds;
             searchTime = searchStopwatch.ElapsedMilliseconds;
         }
-
-        static void RubiconTest()
-        {
-            StringDictionary dictionary = new AugmentedPatriciaTree();
-            string[] testers = { "romane", "romanus", "romulus", "rubens", "ruber", "rubicon", "rubicundus" };
-            string[] halfers = { "romane", "romulus", "ruber", "rubicundus" };
-
-            foreach(var word in testers)
-            {
-                dictionary.Insert(word);
-            }
-            foreach(var word in halfers)
-            {
-                dictionary.Delete(word);
-            }
-            foreach (var word in halfers)
-            {
-                dictionary.Delete(word);
-            }
-            foreach(var word in testers)
-            {
-                Console.WriteLine(dictionary.Search(word));
-            }
-        }
     }
 }
